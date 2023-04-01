@@ -1,0 +1,45 @@
+ProjectNameA
+Select the Menu-options (you can use KEYBOARD or MOUSE)
+
+ You Selected Project: ProjectNameA
+Set source folder to D:\Unreal Projects\Repos\Project_Selector\Content_Folders\ProjectNameA
+destination folder: D:\Unreal Projects\Repos\Project_Selector\Content
+No file with the same name as the source folder was found in the destination folder.
+
+ Log File : D:\Unreal Projects\Repos\Project_Selector\robocopy-log.txt
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows                              
+-------------------------------------------------------------------------------
+
+  Started : March 30, 2023 11:25:50 PM
+   Source : D:\Unreal Projects\Repos\Project_Selector\Content_Folders\ProjectNameA\
+     Dest : D:\Unreal Projects\Repos\Project_Selector\Content\
+
+    Files : *.*
+	    
+  Options : *.* /TEE /S /E /DCOPY:DA /COPY:DAT /MOVE /R:1000000 /W:30 
+
+------------------------------------------------------------------------------
+
+	                   0	D:\Unreal Projects\Repos\Project_Selector\Content_Folders\ProjectNameA\
+	*EXTRA Dir        -1	D:\Unreal Projects\Repos\Project_Selector\Content\Test\
+	  *EXTRA File 		   1.0 g	dummy.txt
+	  *EXTRA File 		      39	ProjectSelectorData
+	  *EXTRA File 		       0	test.cpp
+	  *EXTRA File 		       0	test2.cpp
+	  *EXTRA File 		       0	test3.cpp
+
+------------------------------------------------------------------------------
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :         1         0         1         0         0         1
+   Files :         0         0         0         0         0         5
+   Bytes :         0         0         0         0         0   1.000 g
+   Times :   0:00:00   0:00:00                       0:00:00   0:00:00
+   Ended : March 30, 2023 11:25:50 PM
+
+Finished moving project
+
+
+Press any key to continue . . . 
