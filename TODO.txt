@@ -1,3 +1,7 @@
 • Use the Projects.json to know what project is the active one so that you can have a temp folder for it in the content projects folder
 
-• Make it create a UEPCM_Data file when setting the directory of a project if none exists and also ask for the name of the project.
+• When setting the project content path, create a UEPCM_Data file in the directory of the project content folder
+  if none exists, also create an empty folder with the name of the project like (Project_Name) and also ask for the name of the project.
+  (Possibly move the UEPCM_Data file into that folder and add back the .json extension to it)
+
+• Set the folder named (Project_Name) to be the name of the project when creating a new project.
