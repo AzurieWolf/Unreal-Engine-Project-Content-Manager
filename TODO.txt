@@ -5,3 +5,5 @@
   (Possibly move the UEPCM_Data file into that folder and add back the .json extension to it)
 
 • Set the folder named (Project_Name) to be the name of the project when creating a new project.
+
+• Add the ability to set the phoenix.uproject so you can launch the project within the program.
