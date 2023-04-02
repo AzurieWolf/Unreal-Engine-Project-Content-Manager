@@ -36,6 +36,9 @@ Echo.Welcome to Unreal Engine Project Content Manager !programVersion! by !progr
 Echo.
 Echo.This program allows you to quickly create and/or switch your content folders for your Hogwarts Legacy UE project.
 Echo.
+Echo.You should start by going to Settings to set your Directories for both your
+Echo.Projects Content Folder and your Content Projects Folder.
+Echo.
 Echo.Use your Keyboard or Mouse to navigate Menu Options.
 Echo.
 CmdMenuSel 0FF0 "Create A New Content Project" "Manage Projects" "Settings" "Exit"
