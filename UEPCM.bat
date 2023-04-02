@@ -39,6 +39,13 @@ Echo.
 Echo.You should start by going to Settings to set your Directories for both your
 Echo.Projects Content Folder and your Content Projects Folder.
 Echo.
+Echo.This is temporary until i finish this feature but
+Echo.If you have an existing project with content inside of it.
+Echo.You'll have to add the UEPCM_Data file to your content folder manually
+Echo.before setting the directory of the project content folder.
+Echo.Navigate to the root folder of this program and open the
+Echo.UEPCM_Data File Folder and open the README.txt file for what to do next.
+Echo.
 Echo.Use your Keyboard or Mouse to navigate Menu Options.
 Echo.
 CmdMenuSel 0FF0 "Create A New Content Project" "Manage Projects" "Settings" "Exit"
