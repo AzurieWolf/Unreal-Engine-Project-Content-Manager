@@ -2,4 +2,4 @@ v1.1.0.5
     • Added popup input windows for creating a new project and for renaming a project.
     • Added some more checks.
     • Added an about section.
-    • Added an option Open Project Manager to Create A New Content Project
+    • Added an option Open Project Manager to Create A New Content Project.
