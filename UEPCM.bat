@@ -3,7 +3,7 @@ cd /d "%~dp0"
 setlocal EnableDelayedExpansion
 
 :: Program Version
-Set programVersion=v1.1.0.1
+Set programVersion=v1.1.0.5
 :: Program Author
 Set programAuthor=AzurieWolf
 :: Set window Title
@@ -54,7 +54,7 @@ Echo.UEPCM_Data File Folder and open the README.txt file for what to do next.
 Echo.
 Echo.Use your Keyboard or Mouse to navigate Menu Options.
 Echo.
-CmdMenuSel 0FF0 "Create A New Content Project" "Manage Projects" "Settings" "Exit"
+CmdMenuSel 0FF0 "Create A New Content Project" "Manage Projects" "Settings" "About" "Exit"
 If /I "%Errorlevel%" == "1" (
     Goto :CreateNewProjectContentFolder
 )
@@ -73,7 +73,29 @@ If /I "%Errorlevel%" == "3" (
     Goto :Settings
 )
 If /I "%Errorlevel%" == "4" (
+    Goto :about
+)
+If /I "%Errorlevel%" == "5" (
     Goto :Exit
+)
+
+:about
+cls
+echo.Unreal Engine Project Content Manager !programVersion!
+echo.
+echo.Created by AzurieWolf
+echo.
+echo.You can find me and all my socials/projects by opening the link below.
+echo.
+CmdMenuSel 0FF0 "Open Link in Browser" "Back"
+If /I "%Errorlevel%" == "1" (
+    echo.
+    echo.
+    start https://linktr.ee/azuriewolf
+    Goto :about
+)
+If /I "%Errorlevel%" == "2" (
+    Goto :StartMenu
 )
 
 :CreateNewProjectContentFolder
@@ -81,30 +103,86 @@ CALL Data\Bin\load_settings.bat
 cls
 Echo.Create a new content project.
 Echo.
+echo.WARNING... Project names cannot contain spaces.
+echo.
+echo.You can use Underscores, Dashes or Uppercase Letters
+echo.
+echo.Example:
+echo."ProjectName, Project_Name, Project-Name"
+echo."projectname, project_name, project-name"
+echo.
+for /F %%i in ('dir /b "%Content_Projects%"') do (
+    echo.content projects = %%i
+    echo.
+    if /I "%%i"=="" (
+        :: Folder is empty
+        Goto :CreateNewProjectMenuA
+    ) else (
+        :: Folder is not empty
+        Goto :CreateNewProjectMenuB
+    )
+)
+
+:CreateNewProjectMenuA
 CmdMenuSel 0FF0 "New Content Project" "Back"
 If /I "%Errorlevel%" == "1" (
-    Goto :ContinueToCreateProject
+    Goto :NameNewProject
 )
 If /I "%Errorlevel%" == "2" (
     Goto :StartMenu
 )
 
-:ContinueToCreateProject
-cls
-Goto :SetCreateProjectName
-:LoopCreateProjectName
-if "%NewProjectNameInput%"=="" (
-    cls
-    echo Error: You must enter a project name.
-    :SetCreateProjectName
-    set /p "NewProjectNameInput=Enter Project Name: "
-    goto :LoopCreateProjectName
+:CreateNewProjectMenuB
+CmdMenuSel 0FF0 "New Content Project" "Open Projects Manager" "Back"
+If /I "%Errorlevel%" == "1" (
+    Goto :NameNewProject
 )
-set NewProjectNameInput=%NewProjectNameInput: =%
-IF EXIST "%Content_Projects%\!NewProjectNameInput!" (
-    Goto :ProjectAlreadyExists
+If /I "%Errorlevel%" == "2" (
+    Goto :ProjectsManager
+)
+If /I "%Errorlevel%" == "3" (
+    Goto :StartMenu
 )
 
+:NameNewProject
+:InputProjectName
+cls
+set NewProjectNameInput=
+set vbscript="Data\Temps\inputbox.vbs"
+set title="Please Enter Your Projects Name:"
+set default=""
+
+echo Set objShell = CreateObject("WScript.Shell") > %vbscript%
+echo response = InputBox(%title%, "Input", %default%) >> %vbscript%
+echo if response = "" then wscript.quit(1) >> %vbscript%
+echo wscript.echo response>>%vbscript%
+
+for /f "delims=" %%I in ('cscript //nologo %vbscript%') do set "NewProjectNameInput=%%I"
+
+del %vbscript%
+
+if "%NewProjectNameInput%"=="" (
+    echo.Error: You either left the project name field empty or you cancelled the operation.
+    pause
+    Goto :CreateNewProjectContentFolder
+) else (
+    IF EXIST "%Content_Projects%\!NewProjectNameInput!" (
+        Goto :NewCreateProjectError
+    ) else (
+        Goto :ContinueToCreateProject
+    )
+)
+
+:NewCreateProjectError
+cls
+echo.A project with the name '!NewProjectNameInput!' already exists...
+echo.
+echo.Please enter a different name to continue...
+echo.
+pause
+Goto :CreateNewProjectContentFolder
+
+:ContinueToCreateProject
 cls
 Echo.Are you sure you'd like to create !NewProjectNameInput!?
 Echo.
@@ -137,14 +215,6 @@ IF NOT EXIST "%Content_Projects%\!NewProjectNameInput!" (
 
     Goto :NewProjectCreated
 )
-Goto :CreateNewProjectContentFolder
-
-:ProjectAlreadyExists
-echo.
-echo.A project already exists with that name.
-echo.Please try again with a different name.
-echo.
-pause
 Goto :CreateNewProjectContentFolder
 
 :NewProjectCreated
@@ -316,18 +386,43 @@ CALL Data\Bin\jq-win64-load.bat
 
 set "oldProjectName=%Content_Projects%\!selectedProject!"
 
-Goto :SetRenameSelectedProject
-:LoopRenameSelectedProject
-if "%newProjectName%"=="" (
-    cls
-    echo Error: You must enter a project name.
-    :SetRenameSelectedProject
-    Echo.You are renaming '!selectedProject!'.
-    set /p "newProjectName=Rename Project To: "
-    goto :LoopRenameSelectedProject
+set projectRename=
+set vbscript="Data\Temps\inputbox.vbs"
+set title="Rename !selectedProject! to:"
+set default="!selectedProject!"
+
+echo Set objShell = CreateObject("WScript.Shell") > %vbscript%
+echo response = InputBox(%title%, "Input", %default%) >> %vbscript%
+echo if response = "" then wscript.quit(1) >> %vbscript%
+echo wscript.echo response>>%vbscript%
+
+for /f "delims=" %%I in ('cscript //nologo %vbscript%') do set "projectRename=%%I"
+
+if "%projectRename%"=="" (
+    echo There was a problem: You either left the project name field empty or you cancelled the operation.
+    pause
+    Goto :ProjectsManager
+) else (
+    if "%projectRename%"=="!selectedProject!" (
+        Goto :RenameError
+    ) else (
+        echo User entered "%projectRename%".
+        Goto :ContinueToRenameProject
+    )
 )
+
+:RenameError
+echo.Error: You're trying to rename !selectedProject! to !projectRename!...
+echo.
+echo.Please enter a different name to continue...
+echo.
+pause
+Goto :RenameSelectedProject
+
+:ContinueToRenameProject
 cls
-Echo.Are you sure you'd like to rename your project '!selectedProject!' to '!newProjectName!'?
+Echo.Are you sure you'd like to rename your project '!selectedProject!' to '!projectRename!'?
+echo.
 CmdMenuSel 0FF0 "Confirm" "Cancel"
 If /I "%Errorlevel%" == "1" (
     Goto :ProjectManagerRename
@@ -341,19 +436,19 @@ IF EXIST "%Content_Projects%\!selectedProject!" (
     echo.Attempting to rename '!selectedProject!'...
 
     echo.Using jq to update the projectName property in the UEPCM_Data file...
-    %jq% ".projectName=\"%newProjectName%\"" "%Content_Projects%\!selectedProject!\!Content_Project_Json_Data_File_Name!" > "%Content_Projects%\!selectedProject!\%Content_Project_Json_Data_File_Name%.tmp"
+    %jq% ".projectName=\"%projectRename%\"" "%Content_Projects%\!selectedProject!\!Content_Project_Json_Data_File_Name!" > "%Content_Projects%\!selectedProject!\%Content_Project_Json_Data_File_Name%.tmp"
 
     echo.Replacing the original JSON file with the updated project name...
     move /y "%Content_Projects%\!selectedProject!\%Content_Project_Json_Data_File_Name%.tmp" "%Content_Projects%\!selectedProject!\%Content_Project_Json_Data_File_Name%" > nul 2>&1
 
     echo.Renaming the project folder...
-    ren "%Content_Projects%\!selectedProject!" "%newProjectName%"
+    ren "%Content_Projects%\!selectedProject!" "%projectRename%"
 )
 IF NOT EXIST "%Content_Projects%\!selectedProject!" (
-    echo.Successfully Renamed '!selectedProject!' to '!newProjectName!'...
+    echo.Successfully Renamed '!selectedProject!' to '!projectRename!'...
     echo.
 ) else (
-    echo.Failed to Rename '!selectedProject!' to '!newProjectName!'...
+    echo.Failed to Rename '!selectedProject!' to '!projectRename!'...
     echo.
 )
 pause
