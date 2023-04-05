@@ -1,3 +1,12 @@
+v1.1.1.0
+    • Added Getting Started Tab.
+    • Added more checks.
+    • Renamed a few variables.
+    • The window no longer closes if you are inside the project manager and delete all of your projects.
+        It will now take you back to the start menu.
+    • The window no longer closes if you activate a project and your content projects storage folder becomes empty.
+        It will now take you back to the start menu.
+
 v1.1.0.5
     • Added popup input windows for creating a new project and for renaming a project.
     • Added some more checks.
