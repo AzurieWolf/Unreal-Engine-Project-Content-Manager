@@ -3,7 +3,7 @@ cd /d "%~dp0"
 setlocal EnableDelayedExpansion
 
 :: Program Version
-Set programVersion=v1.1.0.5
+Set programVersion=v1.1.1.0
 :: Program Author
 Set programAuthor=AzurieWolf
 :: Set window Title
