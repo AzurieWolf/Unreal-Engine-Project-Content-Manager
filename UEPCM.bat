@@ -9,19 +9,20 @@ Set programAuthor=AzurieWolf
 :: Set window Title
 Title Unreal Engine Project Content Manager !programVersion! by !programAuthor!
 :: Set CmdMenuSel path
-Set "Path=%Path%;%~dp0Data\Bin"
+set "Path=%Path%;%~dp0Data\Bin"
 :: Set background color
 Color 0F
 :: Set window width and height
 Mode 120,30
 
 :: Log file
-Set log_file=log.txt
+set log_file=log.txt
 
 :: Settings file
-Set SettingsJsonData=Settings.json
-Set ProjectsJsonData=Projects.json
-Set Content_Project_Json_Data_File_Name=UEPCM_Data
+set SettingsJsonData=Settings.json
+set ProjectsJsonData=Projects.json
+set Content_Project_Json_Data_File_Name=UEPCM_Data
+set TimeoutTime=10
 
 :: Get the JSON data processor
 CALL Data\Bin\jq-win64-load.bat
@@ -56,7 +57,7 @@ If /I "%Errorlevel%" == "2" (
     :: Folder is empty
     echo.
     echo.Your projects storage folder is empty.
-    pause
+    timeout /t %TimeoutTime%
     Goto :StartMenu
 )
 If /I "%Errorlevel%" == "3" (
@@ -180,7 +181,7 @@ del %vbscript%
 
 if "%NewProjectNameInput%"=="" (
     echo.Error: You either left the project name field empty or you cancelled the operation.
-    pause
+    timeout /t %TimeoutTime%
     Goto :CreateNewProjectContentFolder
 ) else (
     IF EXIST "%UEPCM_Content_Projects%\!NewProjectNameInput!" (
@@ -196,7 +197,7 @@ echo.A project with the name '!NewProjectNameInput!' already exists...
 echo.
 echo.Please enter a different name to continue...
 echo.
-pause
+timeout /t %TimeoutTime%
 Goto :InputProjectName
 
 :ContinueToCreateProject
@@ -246,7 +247,7 @@ IF EXIST "%UEPCM_Content_Projects%\!NewProjectNameInput!" (
     echo.
     set EnteredText=
 )
-pause
+timeout /t %TimeoutTime%
 Goto :CreateNewProjectContentFolder
 
 :: With the Project Manager you can Set your active project, Rename a project or Delete a project.
@@ -308,7 +309,7 @@ If /I "%Errorlevel%" == "1" (
     :: Folder is empty
     echo.
     echo.Your projects storage folder is empty.
-    pause
+    timeout /t %TimeoutTime%
     Goto :ProjectsManager
 )
 If /I "%Errorlevel%" == "2" (
@@ -354,7 +355,7 @@ IF NOT EXIST "%UEPCM_Content_Projects%\!selectedProject!" (
 ) else (
     echo.Failed to active project "%selectedProject%".
     echo.
-    pause
+    timeout /t %TimeoutTime%
     goto :ProjectsManager
 )
 
@@ -364,7 +365,7 @@ dir /b "%UEPCM_Content_Projects%\*" | findstr . >nul && (
     cls
     echo.Your active project has been successfully set to "%selectedProject%".
     echo.
-    pause
+    timeout /t %TimeoutTime%
     Goto :ProjectsManager
 ) || (
     :: The projects folder is empty.
@@ -373,7 +374,7 @@ dir /b "%UEPCM_Content_Projects%\*" | findstr . >nul && (
     echo.
     echo.Your projects storage folder is empty.
     echo.
-    pause
+    timeout /t %TimeoutTime%
     Goto :StartMenu
 )
 
@@ -420,7 +421,7 @@ IF NOT EXIST "%UEPCM_Content_Projects%\!selectedProject!" (
 ) else (
     echo.Failed to active project "%selectedProject%".
     echo.
-    pause
+    timeout /t %TimeoutTime%
     goto :ProjectsManager
 )
 
@@ -430,7 +431,7 @@ dir /b "%UEPCM_Content_Projects%\*" | findstr . >nul && (
     cls
     echo.Your active project has been successfully set to "%selectedProject%".
     echo.
-    pause
+    timeout /t %TimeoutTime%
     Goto :ProjectsManager
 ) || (
     :: The projects folder is empty.
@@ -439,7 +440,7 @@ dir /b "%UEPCM_Content_Projects%\*" | findstr . >nul && (
     echo.
     echo.Your projects storage folder is empty.
     echo.
-    pause
+    timeout /t %TimeoutTime%
     Goto :StartMenu
 )
 
@@ -461,7 +462,7 @@ for /f "delims=" %%I in ('cscript //nologo %vbscript%') do set "projectRename=%%
 
 if "%projectRename%"=="" (
     echo There was a problem: You either left the project name field empty or you cancelled the operation.
-    pause
+    timeout /t %TimeoutTime%
     Goto :ProjectsManager
 ) else (
     if "%projectRename%"=="!selectedProject!" (
@@ -477,7 +478,7 @@ echo.Error: You're trying to rename !selectedProject! to !projectRename!...
 echo.
 echo.Please enter a different name to continue...
 echo.
-pause
+timeout /t %TimeoutTime%
 Goto :RenameSelectedProject
 
 :ContinueToRenameProject
@@ -512,7 +513,7 @@ IF NOT EXIST "%UEPCM_Content_Projects%\!selectedProject!" (
     echo.Failed to Rename '!selectedProject!' to '!projectRename!'...
     echo.
 )
-pause
+timeout /t %TimeoutTime%
 Goto :ProjectsManager
 
 :DeleteSelectedProject
@@ -539,7 +540,7 @@ IF NOT EXIST "%UEPCM_Content_Projects%\!selectedProject!" (
 ) else (
     echo.Failed to delete '!selectedProject!'
     echo.
-    pause
+    timeout /t %TimeoutTime%
     goto :ProjectsManager
 )
 
@@ -549,7 +550,7 @@ dir /b "%UEPCM_Content_Projects%\*" | findstr . >nul && (
     cls
     echo.Successfully deleted '!selectedProject!'
     echo.
-    pause
+    timeout /t %TimeoutTime%
     Goto :ProjectsManager
 ) || (
     :: The projects folder is empty.
@@ -558,7 +559,7 @@ dir /b "%UEPCM_Content_Projects%\*" | findstr . >nul && (
     echo.
     echo.Your projects storage folder is empty.
     echo.
-    pause
+    timeout /t %TimeoutTime%
     Goto :StartMenu
 )
 
@@ -660,7 +661,7 @@ cls
 
 if "%setExistingProjectName%"=="" (
     echo.Error: You either left the project name field empty or you cancelled the operation.
-    pause
+    timeout /t %TimeoutTime%
     if exist "%Project_Content_Folder%\%Content_Project_Json_Data_File_Name%" (
         echo.Deleting "%Content_Project_Json_Data_File_Name%" file...
         del "%Project_Content_Folder%\%Content_Project_Json_Data_File_Name%"
@@ -684,7 +685,7 @@ echo.
 
 del %vbscript%
 
-pause
+timeout /t %TimeoutTime%
 Goto :InputExistingProjectName
 
 :ContinueToUpdateSettingsAndExistingProjectName
@@ -715,7 +716,7 @@ echo.
 echo.Updated Project Content Folder Directory in "%SettingsJsonData%"
 echo.to "%ProjectContentFolder%"
 echo.
-pause
+timeout /t %TimeoutTime%
 Goto :SetDirectories
 
 :UEPCM_Content_Projects_Storage_Directory
@@ -751,7 +752,7 @@ move /y "%tempFile%" "%SettingsJsonData%" > nul
 echo.Updated UEPCM Content Projects Directory in "%SettingsJsonData%"
 echo.to "%ContentProjectsDirectory%"
 echo.
-pause
+timeout /t %TimeoutTime%
 Goto :SetDirectories
 
 :Exit
