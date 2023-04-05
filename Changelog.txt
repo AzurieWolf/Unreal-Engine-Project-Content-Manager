@@ -1,3 +1,7 @@
+v1.1.1.4
+    • Added download required files directly in the cmd, when starting the program if they're missing.
+    • Added ability to download the PhoenixUProj Content Files directly in the cmd.
+
 v1.1.1.2
     • Added option to download PhoenixUProj Content files optionally.
     • Added Exist Check for PhoenixUProj_Content Folder.
