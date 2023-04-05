@@ -1,4 +1,7 @@
 v1.1.1.4
+    • Fixed an issue with downloading required files.
+
+v1.1.1.4
     • Added download required files directly in the cmd, when starting the program if they're missing.
     • Added ability to download the PhoenixUProj Content Files directly in the cmd.
 
