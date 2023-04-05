@@ -2,7 +2,10 @@
 cd /d "%~dp0"
 setlocal EnableDelayedExpansion
 
-if not exist Data (
+set UEPCM_Data_Folder=Data
+set UEPCM_Temp_Files=Temp_Files
+
+if not exist %UEPCM_Data_Folder% (
     goto :MissingRequiredFiles
 ) else (
     goto :RequiredFilesExist
@@ -10,7 +13,8 @@ if not exist Data (
 
 :MissingRequiredFiles
 
-mkdir Temps
+mkdir %UEPCM_Data_Folder%
+mkdir %UEPCM_Temp_Files%
 
 echo.Required files are missing...
 echo.
@@ -18,31 +22,31 @@ echo.
 set message="Download missing required files?"
 set yesno=0
 
-echo Set objShell = WScript.CreateObject("WScript.Shell") > Temps\tmp.vbs
-echo Set objFSO = CreateObject("Scripting.FileSystemObject") >> Temps\tmp.vbs
-echo intButton = objShell.Popup(%message%,0,"Confirmation",vbYesNo+vbQuestion) >> Temps\tmp.vbs
-echo if intButton = vbYes Then >> Temps\tmp.vbs
-echo     WScript.Echo "Yes" >> Temps\tmp.vbs
-echo else >> Temps\tmp.vbs
-echo     WScript.Echo "No" >> Temps\tmp.vbs
-echo end if >> Temps\tmp.vbs
-cscript //nologo Temps\tmp.vbs > result.txt
+echo Set objShell = WScript.CreateObject("WScript.Shell") > %UEPCM_Temp_Files%\tmp.vbs
+echo Set objFSO = CreateObject("Scripting.FileSystemObject") >> %UEPCM_Temp_Files%\tmp.vbs
+echo intButton = objShell.Popup(%message%,0,"Confirmation",vbYesNo+vbQuestion) >> %UEPCM_Temp_Files%\tmp.vbs
+echo if intButton = vbYes Then >> %UEPCM_Temp_Files%\tmp.vbs
+echo     WScript.Echo "Yes" >> %UEPCM_Temp_Files%\tmp.vbs
+echo else >> %UEPCM_Temp_Files%\tmp.vbs
+echo     WScript.Echo "No" >> %UEPCM_Temp_Files%\tmp.vbs
+echo end if >> %UEPCM_Temp_Files%\tmp.vbs
+cscript //nologo %UEPCM_Temp_Files%\tmp.vbs > result.txt
 set /p yesno=<result.txt
-del result.txt Temps\tmp.vbs
+del result.txt %UEPCM_Temp_Files%\tmp.vbs
 
 if "%yesno%"=="Yes" (
     goto :DownloadRequiredFiles
 ) else (
-    rmdir Temps
+    rmdir %UEPCM_Temp_Files%
+    rmdir %UEPCM_Data_Folder%
     goto :Exit
 )
 
 :DownloadRequiredFiles
+
 set UEPCM_Required_Files_Download_Link=https://www.dropbox.com/s/glhigkf9an1cm4e/UEPCM_Required_Files.zip?dl=1
 
-set UEPCM_Required_Files_ZIP_File=Temps\UEPCM_Required_Files.zip
-
-mkdir Data
+set UEPCM_Required_Files_ZIP_File=%UEPCM_Temp_Files%\UEPCM_Required_Files.zip
 
 set "extractDir=Data"
 
@@ -53,7 +57,7 @@ echo.Extracting %UEPCM_Required_Files_ZIP_File%...
 echo.
 PowerShell -nologo -noprofile -command "Expand-Archive -Path %UEPCM_Required_Files_ZIP_File% -DestinationPath %extractDir% -Force"
 del "%UEPCM_Required_Files_ZIP_File%"
-rmdir Temps
+rmdir %UEPCM_Temp_Files%
 echo.
 echo.Finished downloading required files!
 timeout /t 3
@@ -61,7 +65,7 @@ timeout /t 3
 :RequiredFilesExist
 
 :: Program Version
-Set programVersion=v1.1.1.4
+Set programVersion=v1.1.1.5
 :: Program Author
 Set programAuthor=AzurieWolf
 :: Set window Title
