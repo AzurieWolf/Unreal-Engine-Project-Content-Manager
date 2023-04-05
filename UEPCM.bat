@@ -45,7 +45,7 @@ echo.Go to Getting Started for info on how this program works.
 echo.
 echo.Use your Keyboard or Mouse to navigate Menu Options.
 echo.
-CmdMenuSel 0FF0 "Create A New Content Project" "Manage Projects" "Settings" "Getting Started" "About" "Exit"
+CmdMenuSel 0FF0 "Create A New Content Project" "Manage Projects" "Settings" "Getting Started" "Download PhoenixUProj Content Files" "About" "Exit"
 If /I "%Errorlevel%" == "1" (
     Goto :CreateNewProjectContentFolder
 )
@@ -67,9 +67,12 @@ If /I "%Errorlevel%" == "4" (
     Goto :GettingStarted
 )
 If /I "%Errorlevel%" == "5" (
-    Goto :About
+    Goto :DownloadOrUpdatePhoenixContentFiles
 )
 If /I "%Errorlevel%" == "6" (
+    Goto :About
+)
+If /I "%Errorlevel%" == "7" (
     Goto :Exit
 )
 
@@ -77,7 +80,7 @@ If /I "%Errorlevel%" == "6" (
 cls
 echo.^<==== Setting your UE Project Content Directory ====^>
 echo.
-echo.To get started using UEPCM go to Settings ^> Set Directories ^> Set UE Project Content Folder Direcory.
+echo.To get started using UEPCM go to Settings ^> Set Directories ^> Set UE Project Content Folder Directory.
 echo.
 echo.(Your "UE Project Content Folder" is the folder called "Content", located inside of your "PhoenixUProj" folder)
 echo.
@@ -86,8 +89,8 @@ echo.^<==== Setting your UEPCM Content Projects Storage Directory ====^>
 echo.
 echo.You can also change the location of where UEPCM stores your Content Projects.
 echo.
-echo.(By default UEPCM stores your content projects in the root folder of the program,
-echo.Located inside of the folder called "%UEPCM_Content_Projects_Default_Folder_Name%")
+echo.(By default, UEPCM stores your content projects in the root folder of the program,
+echo.located inside of the folder called "%UEPCM_Content_Projects_Default_Folder_Name%")
 echo.
 CmdMenuSel 0FF0 "Back"
 If /I "%Errorlevel%" == "1" (
@@ -574,6 +577,56 @@ If /I "%Errorlevel%" == "1" (
 If /I "%Errorlevel%" == "2" (
     Goto :StartMenu
 )
+
+:DownloadOrUpdatePhoenixContentFiles
+cls
+echo.If you'd like you to, you can download PhoenixUProj Content Files.
+echo.
+echo.These files are optional, but you can download them if you'd like to.
+echo.
+echo.The download opens in your internet browser.
+echo.
+CmdMenuSel 0FF0 "Open Download Link" "Back"
+If /I "%Errorlevel%" == "1" (
+    cls
+    echo.Opening Link to download PhoenixUProj Content Files...
+    echo.
+    start https://github.com/narknon/PhoenixUProj/tree/main/Content
+    timeout /t 3
+    Goto :DownloadPhoenixContentFiles
+)
+If /I "%Errorlevel%" == "2" (
+    Goto :StartMenu
+)
+goto :Settings
+
+:DownloadPhoenixContentFiles
+cls
+echo.When your download is finished, ^extract all files to the PhoenixUProj_Content folder.
+echo.
+echo.You can open the PhoenixUProj_Content Folder or your Downloads folder by selecting the option below.
+echo.
+CmdMenuSel 0FF0 "Open PhoenixUProj_Content Folder" "Open Your Downloads Folder" "Back to Start Menu"
+If /I "%Errorlevel%" == "1" (
+    explorer.exe "%New_PhoenixUProj_Content_Folder%"
+    echo.
+    echo.Opening your "%New_PhoenixUProj_Content_Folder%" Folder.
+    echo.
+    timeout /t 1
+    goto :DownloadPhoenixContentFiles
+)
+If /I "%Errorlevel%" == "2" (
+    explorer.exe "%userprofile%\Downloads"
+    echo.
+    echo.Opening your "Downloads" Folder.
+    echo.
+    timeout /t 1
+    goto :DownloadPhoenixContentFiles
+)
+If /I "%Errorlevel%" == "3" (
+    Goto :StartMenu
+)
+goto :StartMenu
 
 :SetDirectories
 CALL Data\Bin\load_settings.bat
