@@ -27,45 +27,35 @@ Set Content_Project_Json_Data_File_Name=UEPCM_Data
 CALL Data\Bin\jq-win64-load.bat
 CALL Data\Bin\load_settings.bat
 
-IF NOT EXIST "%Content_Projects%" (
-    Echo.Creating %Content_Projects% folder...
-    mkdir "%Content_Projects%"
+IF NOT EXIST "%UEPCM_Content_Projects%" (
+    Echo.Creating %UEPCM_Content_Projects% folder...
+    mkdir "%UEPCM_Content_Projects%"
 )
 
 set ProjectFolder=
-for /f "delims=" %%a in ('dir /a /b "%Content_Projects%"') do set ProjectFolder=%%a
+for /f "delims=" %%a in ('dir /a /b "%UEPCM_Content_Projects%"') do set ProjectFolder=%%a
 
 :StartMenu
 CALL Data\Bin\load_settings.bat
 cls
-Echo.Welcome to Unreal Engine Project Content Manager !programVersion! by !programAuthor!.
-Echo.
-Echo.This program allows you to quickly create and/or switch your content folders for your Hogwarts Legacy UE project.
-Echo.
-Echo.You should start by going to Settings to set your Directories for both your
-Echo.Projects Content Folder and your Content Projects Folder.
-Echo.
-Echo.This is temporary until i finish this feature but
-Echo.If you have an existing project with content inside of it.
-Echo.You'll have to add the UEPCM_Data file to your content folder manually
-Echo.before setting the directory of the project content folder.
-Echo.Navigate to the root folder of this program and open the
-Echo.UEPCM_Data File Folder and open the README.txt file for what to do next.
-Echo.
-Echo.Use your Keyboard or Mouse to navigate Menu Options.
-Echo.
-CmdMenuSel 0FF0 "Create A New Content Project" "Manage Projects" "Settings" "About" "Exit"
+echo.Welcome to Unreal Engine Project Content Manager !programVersion! by !programAuthor!.
+echo.
+echo.Go to Getting Started for info on how this program works.
+echo.
+echo.Use your Keyboard or Mouse to navigate Menu Options.
+echo.
+CmdMenuSel 0FF0 "Create A New Content Project" "Manage Projects" "Settings" "Getting Started" "About" "Exit"
 If /I "%Errorlevel%" == "1" (
     Goto :CreateNewProjectContentFolder
 )
 If /I "%Errorlevel%" == "2" (
-    for /F %%i in ('dir /b "%Content_Projects%"') do (
+    for /F %%i in ('dir /b "%UEPCM_Content_Projects%"') do (
         :: Folder is not empty
         goto :ProjectsManager
     )
     :: Folder is empty
     echo.
-    echo.Your projects folder is empty...
+    echo.Your projects storage folder is empty.
     pause
     Goto :StartMenu
 )
@@ -73,17 +63,43 @@ If /I "%Errorlevel%" == "3" (
     Goto :Settings
 )
 If /I "%Errorlevel%" == "4" (
-    Goto :about
+    Goto :GettingStarted
 )
 If /I "%Errorlevel%" == "5" (
+    Goto :About
+)
+If /I "%Errorlevel%" == "6" (
     Goto :Exit
 )
 
-:about
+:GettingStarted
+cls
+echo.^<==== Setting your UE Project Content Directory ====^>
+echo.
+echo.To get started using UEPCM go to Settings ^> Set Directories ^> Set UE Project Content Folder Direcory.
+echo.
+echo.(Your "UE Project Content Folder" is the folder called "Content", located inside of your "PhoenixUProj" folder)
+echo.
+echo.
+echo.^<==== Setting your UEPCM Content Projects Storage Directory ====^>
+echo.
+echo.You can also change the location of where UEPCM stores your Content Projects.
+echo.
+echo.(By default UEPCM stores your content projects in the root folder of the program,
+echo.Located inside of the folder called "%UEPCM_Content_Projects_Default_Folder_Name%")
+echo.
+CmdMenuSel 0FF0 "Back"
+If /I "%Errorlevel%" == "1" (
+    Goto :StartMenu
+)
+
+:About
 cls
 echo.Unreal Engine Project Content Manager !programVersion!
 echo.
 echo.Created by AzurieWolf
+echo.
+echo.This program allows you to manage your project content folder for your Hogwarts Legacy UE project.
 echo.
 echo.You can find me and all my socials/projects by opening the link below.
 echo.
@@ -101,19 +117,9 @@ If /I "%Errorlevel%" == "2" (
 :CreateNewProjectContentFolder
 CALL Data\Bin\load_settings.bat
 cls
-Echo.Create a new content project.
-Echo.
-echo.WARNING... Project names cannot contain spaces.
+echo.Create a new content project.
 echo.
-echo.You can use Underscores, Dashes or Uppercase Letters
-echo.
-echo.Example:
-echo."ProjectName, Project_Name, Project-Name"
-echo."projectname, project_name, project-name"
-echo.
-for /F %%i in ('dir /b "%Content_Projects%"') do (
-    echo.content projects = %%i
-    echo.
+for /f %%i in ('dir /b "%UEPCM_Content_Projects%"') do (
     if /I "%%i"=="" (
         :: Folder is empty
         Goto :CreateNewProjectMenuA
@@ -146,11 +152,12 @@ If /I "%Errorlevel%" == "3" (
 
 :NameNewProject
 :InputProjectName
+:InputLoop
 cls
 set NewProjectNameInput=
 set vbscript="Data\Temps\inputbox.vbs"
 set title="Please Enter Your Projects Name:"
-set default=""
+set default="%EnteredText%"
 
 echo Set objShell = CreateObject("WScript.Shell") > %vbscript%
 echo response = InputBox(%title%, "Input", %default%) >> %vbscript%
@@ -159,6 +166,16 @@ echo wscript.echo response>>%vbscript%
 
 for /f "delims=" %%I in ('cscript //nologo %vbscript%') do set "NewProjectNameInput=%%I"
 
+set EnteredText=%NewProjectNameInput%
+
+:: Check if the input contains spaces
+echo "%NewProjectNameInput%"| find " " > nul
+if %errorlevel% equ 0 (
+    :: Replace spaces with underscores
+    set "NewProjectNameInput=%NewProjectNameInput: =_%"
+    set "EnteredText=%EnteredText: =_%"
+)
+
 del %vbscript%
 
 if "%NewProjectNameInput%"=="" (
@@ -166,7 +183,7 @@ if "%NewProjectNameInput%"=="" (
     pause
     Goto :CreateNewProjectContentFolder
 ) else (
-    IF EXIST "%Content_Projects%\!NewProjectNameInput!" (
+    IF EXIST "%UEPCM_Content_Projects%\!NewProjectNameInput!" (
         Goto :NewCreateProjectError
     ) else (
         Goto :ContinueToCreateProject
@@ -180,7 +197,7 @@ echo.
 echo.Please enter a different name to continue...
 echo.
 pause
-Goto :CreateNewProjectContentFolder
+Goto :InputProjectName
 
 :ContinueToCreateProject
 cls
@@ -197,35 +214,37 @@ If /I "%Errorlevel%" == "2" (
 :CreateContentFolder
 Echo.
 Echo.Creating !NewProjectNameInput! project folder...
-IF NOT EXIST "%Content_Projects%\!NewProjectNameInput!" (
+IF NOT EXIST "%UEPCM_Content_Projects%\!NewProjectNameInput!" (
     CALL Data\Bin\jq-win64-load.bat
-    mkdir "%Content_Projects%\%NewProjectNameInput%"
+    mkdir "%UEPCM_Content_Projects%\%NewProjectNameInput%"
 
-    robocopy /E "%New_PhoenixUProj_Content_Folder%" "%Content_Projects%\!NewProjectNameInput!"
+    robocopy /E "%New_PhoenixUProj_Content_Folder%" "%UEPCM_Content_Projects%\!NewProjectNameInput!"
 
     echo.Creating UEPCM_Data file...
 
     :: Create the UEPCM_Data file
-    type nul > "%Content_Projects%\%NewProjectNameInput%\!Content_Project_Json_Data_File_Name!"
+    type nul > "%UEPCM_Content_Projects%\%NewProjectNameInput%\!Content_Project_Json_Data_File_Name!"
     :: Set first property
-    echo.{ "projectName": "!NewProjectNameInput!" } >> "%Content_Projects%\%NewProjectNameInput%\!Content_Project_Json_Data_File_Name!"
+    echo.{ "projectName": "!NewProjectNameInput!" } >> "%UEPCM_Content_Projects%\%NewProjectNameInput%\!Content_Project_Json_Data_File_Name!"
     :: Add another property
-    %jq% --arg newProperty "Inactive" ". + { "projectState": $newProperty }" "%Content_Projects%\%NewProjectNameInput%\!Content_Project_Json_Data_File_Name!" > "%Content_Projects%\%NewProjectNameInput%\!Content_Project_Json_Data_File_Name!.temp"
-    move /y "%Content_Projects%\%NewProjectNameInput%\!Content_Project_Json_Data_File_Name!.temp" "%Content_Projects%\%NewProjectNameInput%\!Content_Project_Json_Data_File_Name!" > nul
+    %jq% --arg newProperty "Inactive" ". + { "projectState": $newProperty }" "%UEPCM_Content_Projects%\%NewProjectNameInput%\!Content_Project_Json_Data_File_Name!" > "%UEPCM_Content_Projects%\%NewProjectNameInput%\!Content_Project_Json_Data_File_Name!.temp"
+    move /y "%UEPCM_Content_Projects%\%NewProjectNameInput%\!Content_Project_Json_Data_File_Name!.temp" "%UEPCM_Content_Projects%\%NewProjectNameInput%\!Content_Project_Json_Data_File_Name!" > nul
 
     Goto :NewProjectCreated
 )
 Goto :CreateNewProjectContentFolder
 
 :NewProjectCreated
-IF EXIST "%Content_Projects%\!NewProjectNameInput!" (
+IF EXIST "%UEPCM_Content_Projects%\!NewProjectNameInput!" (
     echo.
     echo.Successfully Created !NewProjectNameInput!.
     echo.
+    set EnteredText=
 ) ELSE (
     echo.
     echo.Failed to create !NewProjectNameInput!.
     echo.
+    set EnteredText=
 )
 pause
 Goto :CreateNewProjectContentFolder
@@ -240,7 +259,7 @@ Set "folderIndex=1"
 Set "source_folder="
 Set "selectedProject="
 
-for /d %%a in ("%Content_Projects%\*") do (
+for /d %%a in ("%UEPCM_Content_Projects%\*") do (
     set "folder=%%~nxa"
     set "folders=!folders!|!folder!"
     set "folders[!folderIndex!]=!folder!"
@@ -254,10 +273,10 @@ CALL Data\Bin\jq-win64-load.bat
 
 Set "currentlyActiveProject="
 
-if exist "%content_folder%\%Content_Project_Json_Data_File_Name%" (
-    for /f "delims=" %%i in ('call "%jq%" -r ".projectName" "%content_folder%\%Content_Project_Json_Data_File_Name%"') do ( set "projectName=%%i" )
+if exist "%Project_Content_Folder%\%Content_Project_Json_Data_File_Name%" (
+    for /f "delims=" %%i in ('call "%jq%" -r ".projectName" "%Project_Content_Folder%\%Content_Project_Json_Data_File_Name%"') do ( set "projectName=%%i" )
     Set "currentlyActiveProject=!projectName!"
-    Set currentlyActiveSourceDir="%Content_Projects%\!projectName!"
+    Set currentlyActiveSourceDir="%UEPCM_Content_Projects%\!projectName!"
 ) else (
     Set "currentlyActiveProject=No Active Project"
 )
@@ -274,7 +293,7 @@ If /I "%Errorlevel%" == "%LastIndex%" (
 )
 
 Set selectedProject=!folders[%Errorlevel%]!
-Set "source_folder=%Content_Projects%\!folders[%Errorlevel%]!"
+Set "source_folder=%UEPCM_Content_Projects%\!folders[%Errorlevel%]!"
 
 :: Project Manage Options
 cls
@@ -282,13 +301,13 @@ echo.Selected Project: !selectedProject!
 echo.
 CmdMenuSel 0FF0 "Set As Active Project" "Rename" "Permanently Delete" "Back"
 If /I "%Errorlevel%" == "1" (
-    for /F %%i in ('dir /b "%Content_Projects%"') do (
+    for /F %%i in ('dir /b "%UEPCM_Content_Projects%"') do (
         :: Folder is not empty
         goto :SetAsActiveProject
     )
     :: Folder is empty
     echo.
-    echo.Your projects folder is empty...
+    echo.Your projects storage folder is empty.
     pause
     Goto :ProjectsManager
 )
@@ -303,7 +322,7 @@ If /I "%Errorlevel%" == "4" (
 )
 
 :SetAsActiveProject
-if exist "%content_folder%\%Content_Project_Json_Data_File_Name%" (
+if exist "%Project_Content_Folder%\%Content_Project_Json_Data_File_Name%" (
     If "!selectedProject!" == "!currentlyActiveProject!" (
         Goto :SetAsActiveProject
     ) else (
@@ -328,10 +347,35 @@ If /I "%Errorlevel%" == "2" (
 :ContinueToSetActiveProject
 Set "Content_Folder_Name=Content"
 echo.Moving for the first time!
-robocopy /move /s /e "%source_folder%" "%content_folder%"
-Echo.Finished moving selected project!
-pause
-Goto :ProjectsManager
+robocopy /move /s /e "%source_folder%" "%Project_Content_Folder%"
+
+IF NOT EXIST "%UEPCM_Content_Projects%\!selectedProject!" (
+    goto :ContinueAfterSuccessfulActivation
+) else (
+    echo.Failed to active project "%selectedProject%".
+    echo.
+    pause
+    goto :ProjectsManager
+)
+
+:ContinueAfterSuccessfulActivation
+dir /b "%UEPCM_Content_Projects%\*" | findstr . >nul && (
+    :: The projects folder isn't empty.
+    cls
+    echo.Your active project has been successfully set to "%selectedProject%".
+    echo.
+    pause
+    Goto :ProjectsManager
+) || (
+    :: The projects folder is empty.
+    cls
+    echo.Your active project has been successfully set to "%selectedProject%".
+    echo.
+    echo.Your projects storage folder is empty.
+    echo.
+    pause
+    Goto :StartMenu
+)
 
 :SwitchActiveProjectToSelectedProject
 cls
@@ -352,39 +396,56 @@ If /I "%Errorlevel%" == "2" (
 :ContinueToSwitchActiveProjectToSelectedProject
 CALL Data\Bin\jq-win64-load.bat
 :: Create a temp directory and move existing contents there
-mkdir "!content_folder_temp!"
-echo.Moving %content_folder% to temp dir
-robocopy /move /s /e "%content_folder%" !content_folder_temp!
-rmdir %content_folder% /s /q
-mkdir "%content_folder%"
+mkdir "!Project_Content_Folder_Temp!"
+echo.Moving %Project_Content_Folder% to temp dir
+robocopy /move /s /e "%Project_Content_Folder%" !Project_Content_Folder_Temp!
+mkdir "%Project_Content_Folder%"
 
 :: Create a temp directory and move selected project from Content_Projects to temp dir
-mkdir "!Content_Projects_temp!"
-echo.Moving %Content_Projects%\!selectedProject! to temp dir
-robocopy /move /s /e "%Content_Projects%\%selectedProject%" !Content_Projects_temp!
-rmdir "%Content_Projects%\%selectedProject%" /s /q
+mkdir "!UEPCM_Content_Projects_Temp!"
+echo.Moving %UEPCM_Content_Projects%\!selectedProject! to temp dir
+robocopy /move /s /e "%UEPCM_Content_Projects%\%selectedProject%" !UEPCM_Content_Projects_Temp!
 
 :: Move temp files from the Content_Projects_temp folder to the content folder.
 echo.Moving Content_Projects_temp files Content folder
-robocopy /move /s /e "!Content_Projects_temp!" "%content_folder%"
+robocopy /move /s /e "!UEPCM_Content_Projects_Temp!" "%Project_Content_Folder%"
 
 :: Move temp files from content_folder_temp to the Content_Projects folder.
-for /f "delims=" %%i in ('call "%jq%" -r ".projectName" "%content_folder_temp%\%Content_Project_Json_Data_File_Name%"') do ( set "GetProjectNameFromTemp=%%i" )
-mkdir "%Content_Projects%\%GetProjectNameFromTemp%"
-robocopy /move /s /e "!content_folder_temp!" "%Content_Projects%\%GetProjectNameFromTemp%"
+for /f "delims=" %%i in ('call "%jq%" -r ".projectName" "%Project_Content_Folder_Temp%\%Content_Project_Json_Data_File_Name%"') do ( set "GetProjectNameFromTemp=%%i" )
+mkdir "%UEPCM_Content_Projects%\%GetProjectNameFromTemp%"
+robocopy /move /s /e "!Project_Content_Folder_Temp!" "%UEPCM_Content_Projects%\%GetProjectNameFromTemp%"
 
-cls
-echo.Your active project has been successfully set to "%selectedProject%".
-echo.
-pause
-Goto :ProjectsManager
-:::::::::
+IF NOT EXIST "%UEPCM_Content_Projects%\!selectedProject!" (
+    goto :ContinueAfterSuccessfulActivation
+) else (
+    echo.Failed to active project "%selectedProject%".
+    echo.
+    pause
+    goto :ProjectsManager
+)
+
+:ContinueAfterSuccessfulActivation
+dir /b "%UEPCM_Content_Projects%\*" | findstr . >nul && (
+    :: The projects folder isn't empty.
+    cls
+    echo.Your active project has been successfully set to "%selectedProject%".
+    echo.
+    pause
+    Goto :ProjectsManager
+) || (
+    :: The projects folder is empty.
+    cls
+    echo.Your active project has been successfully set to "%selectedProject%".
+    echo.
+    echo.Your projects storage folder is empty.
+    echo.
+    pause
+    Goto :StartMenu
+)
 
 :RenameSelectedProject
 cls
 CALL Data\Bin\jq-win64-load.bat
-
-set "oldProjectName=%Content_Projects%\!selectedProject!"
 
 set projectRename=
 set vbscript="Data\Temps\inputbox.vbs"
@@ -404,14 +465,14 @@ if "%projectRename%"=="" (
     Goto :ProjectsManager
 ) else (
     if "%projectRename%"=="!selectedProject!" (
-        Goto :RenameError
+        Goto :ErrorexistingProjectSetName
     ) else (
         echo User entered "%projectRename%".
         Goto :ContinueToRenameProject
     )
 )
 
-:RenameError
+:ErrorexistingProjectSetName
 echo.Error: You're trying to rename !selectedProject! to !projectRename!...
 echo.
 echo.Please enter a different name to continue...
@@ -432,19 +493,19 @@ If /I "%Errorlevel%" == "2" (
 )
 :ProjectManagerRename
 cls
-IF EXIST "%Content_Projects%\!selectedProject!" (
+IF EXIST "%UEPCM_Content_Projects%\!selectedProject!" (
     echo.Attempting to rename '!selectedProject!'...
 
     echo.Using jq to update the projectName property in the UEPCM_Data file...
-    %jq% ".projectName=\"%projectRename%\"" "%Content_Projects%\!selectedProject!\!Content_Project_Json_Data_File_Name!" > "%Content_Projects%\!selectedProject!\%Content_Project_Json_Data_File_Name%.tmp"
+    %jq% ".projectName=\"%projectRename%\"" "%UEPCM_Content_Projects%\!selectedProject!\!Content_Project_Json_Data_File_Name!" > "%UEPCM_Content_Projects%\!selectedProject!\%Content_Project_Json_Data_File_Name%.tmp"
 
     echo.Replacing the original JSON file with the updated project name...
-    move /y "%Content_Projects%\!selectedProject!\%Content_Project_Json_Data_File_Name%.tmp" "%Content_Projects%\!selectedProject!\%Content_Project_Json_Data_File_Name%" > nul 2>&1
+    move /y "%UEPCM_Content_Projects%\!selectedProject!\%Content_Project_Json_Data_File_Name%.tmp" "%UEPCM_Content_Projects%\!selectedProject!\%Content_Project_Json_Data_File_Name%" > nul 2>&1
 
     echo.Renaming the project folder...
-    ren "%Content_Projects%\!selectedProject!" "%projectRename%"
+    ren "%UEPCM_Content_Projects%\!selectedProject!" "%projectRename%"
 )
-IF NOT EXIST "%Content_Projects%\!selectedProject!" (
+IF NOT EXIST "%UEPCM_Content_Projects%\!selectedProject!" (
     echo.Successfully Renamed '!selectedProject!' to '!projectRename!'...
     echo.
 ) else (
@@ -468,21 +529,38 @@ If /I "%Errorlevel%" == "2" (
     Goto :ProjectsManager
 )
 :ConfirmDeleteProject
-IF EXIST "%Content_Projects%\!selectedProject!" (
+IF EXIST "%UEPCM_Content_Projects%\!selectedProject!" (
     cls
     ::Echo.Deleting '!selectedProject!'
-    rmdir "%Content_Projects%\!selectedProject!" /s /q
+    rmdir "%UEPCM_Content_Projects%\!selectedProject!" /s /q
 )
-IF NOT EXIST "%Content_Projects%\!selectedProject!" (
-    echo.Successfully deleted '!selectedProject!'
-    echo.
-    pause
+IF NOT EXIST "%UEPCM_Content_Projects%\!selectedProject!" (
+    goto :ContinueAfterSuccessfulDeletion
 ) else (
     echo.Failed to delete '!selectedProject!'
     echo.
     pause
+    goto :ProjectsManager
 )
-Goto :ProjectsManager
+
+:ContinueAfterSuccessfulDeletion
+dir /b "%UEPCM_Content_Projects%\*" | findstr . >nul && (
+    :: The projects folder isn't empty.
+    cls
+    echo.Successfully deleted '!selectedProject!'
+    echo.
+    pause
+    Goto :ProjectsManager
+) || (
+    :: The projects folder is empty.
+    cls
+    echo.Successfully deleted '!selectedProject!'
+    echo.
+    echo.Your projects storage folder is empty.
+    echo.
+    pause
+    Goto :StartMenu
+)
 
 :Settings
 cls
@@ -503,31 +581,34 @@ echo.Set Directories
 echo.
 echo.Set the directory of your unreal project content folder.
 echo.(The Project Content Folder Directory is the location of your UE Project Content Folder)
-echo.Current Directory: (%content_folder%)
+echo.Current Directory: (%Project_Content_Folder%)
 echo.
-echo.Set the directory of your Projects Folder.
-echo.(The Projects Directory is where all of your projects are created and/or stored)
-echo.Current Directory: (%Content_Projects%)
+echo.Set the directory of your UEPCM Content Projects Storage Folder.
+echo.(The Projects Directory is where all of your projects are created and stored)
+echo.Current Directory: (%UEPCM_Content_Projects%)
 echo.
-CmdMenuSel 0FF0 "Set Project Content Folder Directory" "Set Projects Directory" "Back"
+CmdMenuSel 0FF0 "Set UE Project Content Folder Directory" "Set UEPCM Content Projects Storage Directory" "Back"
 If /I "%Errorlevel%" == "1" (
-    Goto :ProjectContentDir
+    Goto :UE_Project_Content_Folder_Directory
 )
 If /I "%Errorlevel%" == "2" (
-    Goto :ContentProjectsDir
+    Goto :UEPCM_Content_Projects_Storage_Directory
 )
 If /I "%Errorlevel%" == "3" (
     Goto :Settings
 )
 Goto :StartMenu
 
-:ProjectContentDir
+:UE_Project_Content_Folder_Directory
+cls
+echo.Setting the project content folder path...
+echo.
 set ps_fn=Data\Temps\PowerShell_Temp.ps1
 echo [System.Reflection.Assembly]::LoadWithPartialName("System.windows.forms") ^| out-null > %ps_fn%
 echo $FolderBrowserDialog = New-Object System.Windows.Forms.FolderBrowserDialog >> %ps_fn%
 echo $FolderBrowserDialog.RootFolder = "Desktop" >> %ps_fn%
 echo $FolderBrowserDialog.SelectedPath = "%~dp0" >> %ps_fn%
-echo $FolderBrowserDialog.Description = "Select your content projects directory:" >> %ps_fn%
+echo $FolderBrowserDialog.Description = "Select your projects content folder:" >> %ps_fn%
 echo $FolderBrowserDialog.ShowDialog() ^| Out-Null >> %ps_fn%
 echo $FolderBrowserDialog.SelectedPath >> %ps_fn%
 
@@ -538,7 +619,7 @@ CALL Data\Bin\jq-win64-load.bat
 
 set tempFile=%SettingsJsonData%.tmp
 
-%jq% --arg newDir "%ProjectContentFolder%" ".UE_ProjectContentDir = $newDir" "%SettingsJsonData%" > "%tempFile%"
+%jq% --arg newDir "%ProjectContentFolder%" ".UE_Project_Content_Folder_Dir = $newDir" "%SettingsJsonData%" > "%tempFile%"
 
 if errorlevel 1 (
     echo Error: Failed to update JSON file "%SettingsJsonData%".
@@ -546,15 +627,98 @@ if errorlevel 1 (
     Goto :SetDirectories
 )
 
+if not exist "%Project_Content_Folder%\%Content_Project_Json_Data_File_Name%" (
+    echo.The Content folder you selected doesn't contain a UEPCM_Data file...
+    echo.
+    echo.Creating !Content_Project_Json_Data_File_Name! file...
+    echo.
+    echo.Please enter a name for your project...
+
+    :: Create the UEPCM_Data file
+    type nul > "%Project_Content_Folder%\%Content_Project_Json_Data_File_Name%"
+) else (
+    echo.The Content folder you selected contains a !Content_Project_Json_Data_File_Name! file.
+    Goto :ContinueToUpdateProjectContentFolderPath
+)
+
+:InputExistingProjectName
+set setExistingProjectName=
+set vbscript="Data\Temps\inputbox.vbs"
+set title="Set currently active project name: "
+set default="MyProjectName"
+
+echo Set objShell = CreateObject("WScript.Shell") > %vbscript%
+echo response = InputBox(%title%, "Input", %default%) >> %vbscript%
+echo if response = "" then wscript.quit(1) >> %vbscript%
+echo wscript.echo response>>%vbscript%
+
+if exist "%vbscript%" (
+    for /f "delims=" %%I in ('cscript //nologo %vbscript%') do set "setExistingProjectName=%%I"
+)
+
+cls
+
+if "%setExistingProjectName%"=="" (
+    echo.Error: You either left the project name field empty or you cancelled the operation.
+    pause
+    if exist "%Project_Content_Folder%\%Content_Project_Json_Data_File_Name%" (
+        echo.Deleting "%Content_Project_Json_Data_File_Name%" file...
+        del "%Project_Content_Folder%\%Content_Project_Json_Data_File_Name%"
+    )
+    Goto :SetDirectories
+) else (
+    IF EXIST "%UEPCM_Content_Projects%\%setExistingProjectName%" (
+        :: Project already exists
+        Goto :ErrorExistingProjectName
+    ) else (
+        :: Project does not exist
+        Goto :ContinueToUpdateSettingsAndExistingProjectName
+    )
+)
+
+:ErrorExistingProjectName
+echo.Error: You already have an existing project in storage named '%setExistingProjectName%'...
+echo.
+echo.Please enter a different name and try again...
+echo.
+
+del %vbscript%
+
+pause
+Goto :InputExistingProjectName
+
+:ContinueToUpdateSettingsAndExistingProjectName
+if exist "%Project_Content_Folder%\%Content_Project_Json_Data_File_Name%" (
+    :: Set first property
+    echo.{ "projectName": "%setExistingProjectName%" } >> "%Project_Content_Folder%\!Content_Project_Json_Data_File_Name!"
+
+    :: Add another property
+    %jq% --arg newProperty "Inactive" ". + { "projectState": $newProperty }" "%Project_Content_Folder%\!Content_Project_Json_Data_File_Name!" > "%Project_Content_Folder%\!Content_Project_Json_Data_File_Name!.temp"
+
+    :: Replace the previously created UEPCM_Data file with the updated file
+    move /y "%Project_Content_Folder%\!Content_Project_Json_Data_File_Name!.temp" "%Project_Content_Folder%\!Content_Project_Json_Data_File_Name!" > nul
+)
+
+echo.Successfully created UEPCM_Data File for project '%setExistingProjectName%'
+
+:ContinueToUpdateProjectContentFolderPath
+
 :: Replace original JSON file with updated file
 move /y "%tempFile%" "%SettingsJsonData%" > nul
 
+if exist "%vbscript%" (
+    :: Delete the input box
+    del %vbscript%
+)
+
 echo.
-echo Updated path in %SettingsJsonData% to %ProjectContentFolder%
+echo.Updated Project Content Folder Directory in "%SettingsJsonData%"
+echo.to "%ProjectContentFolder%"
+echo.
 pause
 Goto :SetDirectories
 
-:ContentProjectsDir
+:UEPCM_Content_Projects_Storage_Directory
 set ps_fn=Data\Temps\PowerShell_Temp.ps1
 echo [System.Reflection.Assembly]::LoadWithPartialName("System.windows.forms") ^| out-null > %ps_fn%
 echo $FolderBrowserDialog = New-Object System.Windows.Forms.FolderBrowserDialog >> %ps_fn%
@@ -571,7 +735,9 @@ CALL Data\Bin\jq-win64-load.bat
 
 set tempFile=%SettingsJsonData%.tmp
 
-%jq% --arg newDir "%ContentProjectsDirectory%" ".UE_ContentProjectsDir = $newDir" "%SettingsJsonData%" > "%tempFile%"
+%jq% --arg newDir "%ContentProjectsDirectory%" ".UEPCM_Content_Projects_Storage_Dir = $newDir" "%SettingsJsonData%" > "%tempFile%"
+
+cls
 
 if errorlevel 1 (
     echo Error: Failed to update JSON file "%SettingsJsonData%".
@@ -582,8 +748,9 @@ if errorlevel 1 (
 :: Replace original JSON file with updated file
 move /y "%tempFile%" "%SettingsJsonData%" > nul
 
+echo.Updated UEPCM Content Projects Directory in "%SettingsJsonData%"
+echo.to "%ContentProjectsDirectory%"
 echo.
-echo Updated path in %SettingsJsonData% to %ContentProjectsDirectory%
 pause
 Goto :SetDirectories
 
