@@ -1,3 +1,7 @@
+v1.1.1.2
+    • Added option to download PhoenixUProj Content files optionally.
+    • Added Exist Check for PhoenixUProj_Content Folder.
+
 v1.1.1.0
     • Added Getting Started Tab.
     • Added more checks.
