@@ -2,8 +2,66 @@
 cd /d "%~dp0"
 setlocal EnableDelayedExpansion
 
+if not exist Data (
+    goto :MissingRequiredFiles
+) else (
+    goto :RequiredFilesExist
+)
+
+:MissingRequiredFiles
+
+mkdir Temps
+
+echo.Required files are missing...
+echo.
+
+set message="Download missing required files?"
+set yesno=0
+
+echo Set objShell = WScript.CreateObject("WScript.Shell") > Temps\tmp.vbs
+echo Set objFSO = CreateObject("Scripting.FileSystemObject") >> Temps\tmp.vbs
+echo intButton = objShell.Popup(%message%,0,"Confirmation",vbYesNo+vbQuestion) >> Temps\tmp.vbs
+echo if intButton = vbYes Then >> Temps\tmp.vbs
+echo     WScript.Echo "Yes" >> Temps\tmp.vbs
+echo else >> Temps\tmp.vbs
+echo     WScript.Echo "No" >> Temps\tmp.vbs
+echo end if >> Temps\tmp.vbs
+cscript //nologo Temps\tmp.vbs > result.txt
+set /p yesno=<result.txt
+del result.txt Temps\tmp.vbs
+
+if "%yesno%"=="Yes" (
+    goto :DownloadRequiredFiles
+) else (
+    rmdir Temps
+    goto :Exit
+)
+
+:DownloadRequiredFiles
+set UEPCM_Required_Files_Download_Link=https://www.dropbox.com/s/glhigkf9an1cm4e/UEPCM_Required_Files.zip?dl=1
+
+set UEPCM_Required_Files_ZIP_File=Temps\UEPCM_Required_Files.zip
+
+mkdir Data
+
+set "extractDir=Data"
+
+echo.Downloading required files...
+echo.
+curl -L -o %UEPCM_Required_Files_ZIP_File% %UEPCM_Required_Files_Download_Link%
+echo.Extracting %UEPCM_Required_Files_ZIP_File%...
+echo.
+PowerShell -nologo -noprofile -command "Expand-Archive -Path %UEPCM_Required_Files_ZIP_File% -DestinationPath %extractDir% -Force"
+del "%UEPCM_Required_Files_ZIP_File%"
+rmdir Temps
+echo.
+echo.Finished downloading required files!
+timeout /t 3
+
+:RequiredFilesExist
+
 :: Program Version
-Set programVersion=v1.1.1.2
+Set programVersion=v1.1.1.4
 :: Program Author
 Set programAuthor=AzurieWolf
 :: Set window Title
@@ -591,44 +649,59 @@ echo.These files are optional, but you can download them if you'd like to.
 echo.
 echo.The download opens in your internet browser.
 echo.
-CmdMenuSel 0FF0 "Open Download Link" "Back"
+CmdMenuSel 0FF0 "Download PhoenixUProj Content Folder" "Back"
 If /I "%Errorlevel%" == "1" (
-    cls
-    echo.Opening Link to download PhoenixUProj Content Files...
-    echo.
-    start https://www.mediafire.com/file/manpzfvzp8m81gy/PhoenixUProj_Content.zip/file
-    timeout /t 3
-    Goto :DownloadPhoenixContentFiles
+    Goto :DownloadingPhoenixUProjContentFolder
 )
 If /I "%Errorlevel%" == "2" (
     Goto :StartMenu
 )
 goto :Settings
 
-:DownloadPhoenixContentFiles
+:DownloadingPhoenixUProjContentFolder
 cls
-echo.When your download is finished, ^extract all files to the PhoenixUProj_Content folder.
+echo.Are you sure you want to download the PhoenixUProj Content Folder Files?
 echo.
-echo.You can open the PhoenixUProj_Content Folder or your Downloads folder by selecting the option below.
+CmdMenuSel 0FF0 "Confirm" "Cancel"
+If /I "%Errorlevel%" == "1" (
+    goto :ContinueToDownloadPhoenixContentFiles
+)
+If /I "%Errorlevel%" == "2" (
+    Goto :DownloadOrUpdatePhoenixContentFiles
+)
+:ContinueToDownloadPhoenixContentFiles
+set PhoenixUProj_Content_Download_Link=https://www.dropbox.com/s/ekokt0zs0971i1k/PhoenixUProj_Content.zip?dl=1
+
+set PhoenixUProj_Content_ZIP_File=Data\Temps\PhoenixUProj_Content.zip
+
+set "extractDir=%New_PhoenixUProj_Content_Folder%"
+
+echo.starting download...
 echo.
-CmdMenuSel 0FF0 "Open PhoenixUProj_Content Folder" "Open Your Downloads Folder" "Back to Start Menu"
+curl -L -o %PhoenixUProj_Content_ZIP_File% %PhoenixUProj_Content_Download_Link%
+echo.Extracting %PhoenixUProj_Content_ZIP_File%...
+echo.
+PowerShell -nologo -noprofile -command "Expand-Archive -Path %PhoenixUProj_Content_ZIP_File% -DestinationPath %extractDir% -Force"
+del "%PhoenixUProj_Content_ZIP_File%"
+
+Goto :DownloadedPhoenixContentFiles
+
+:DownloadedPhoenixContentFiles
+cls
+echo.Download Completed...
+echo.
+echo.You can open the PhoenixUProj_Content Folder by selecting the option below.
+echo.
+CmdMenuSel 0FF0 "Open PhoenixUProj_Content Folder" "Back to Start Menu"
 If /I "%Errorlevel%" == "1" (
     explorer.exe "%New_PhoenixUProj_Content_Folder%"
     echo.
     echo.Opening your "%New_PhoenixUProj_Content_Folder%" Folder.
     echo.
     timeout /t 1
-    goto :DownloadPhoenixContentFiles
+    goto :DownloadedPhoenixContentFiles
 )
 If /I "%Errorlevel%" == "2" (
-    explorer.exe "%userprofile%\Downloads"
-    echo.
-    echo.Opening your "Downloads" Folder.
-    echo.
-    timeout /t 1
-    goto :DownloadPhoenixContentFiles
-)
-If /I "%Errorlevel%" == "3" (
     Goto :StartMenu
 )
 goto :StartMenu
