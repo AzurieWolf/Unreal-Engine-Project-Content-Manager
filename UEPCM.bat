@@ -3,7 +3,7 @@ cd /d "%~dp0"
 setlocal EnableDelayedExpansion
 
 :: Program Version
-Set programVersion=v1.1.1.0
+Set programVersion=v1.1.1.2
 :: Program Author
 Set programAuthor=AzurieWolf
 :: Set window Title
@@ -596,7 +596,7 @@ If /I "%Errorlevel%" == "1" (
     cls
     echo.Opening Link to download PhoenixUProj Content Files...
     echo.
-    start https://github.com/narknon/PhoenixUProj/tree/main/Content
+    start https://www.mediafire.com/file/manpzfvzp8m81gy/PhoenixUProj_Content.zip/file
     timeout /t 3
     Goto :DownloadPhoenixContentFiles
 )
