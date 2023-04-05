@@ -33,6 +33,11 @@ IF NOT EXIST "%UEPCM_Content_Projects%" (
     mkdir "%UEPCM_Content_Projects%"
 )
 
+IF NOT EXIST "%New_PhoenixUProj_Content_Folder%" (
+    Echo.Creating %New_PhoenixUProj_Content_Folder% folder...
+    mkdir "%New_PhoenixUProj_Content_Folder%"
+)
+
 set ProjectFolder=
 for /f "delims=" %%a in ('dir /a /b "%UEPCM_Content_Projects%"') do set ProjectFolder=%%a
 
