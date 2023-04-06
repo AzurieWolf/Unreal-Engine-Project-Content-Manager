@@ -1,150 +1,176 @@
-::[Bat To Exe Converter]
-::
-::YAwzoRdxOk+EWAjk
-::fBw5plQjdCuDJGyK5kcxJFtkXguIOWiuFYku7fj0/NayhwAtRu01fYzP+buANOUd/mjle5cq02hmvMoYDSdxfR2lfTMdqmFM+G2GOKc=
-::YAwzuBVtJxjWCl3EqQJgSA==
-::ZR4luwNxJguZRRnk
-::Yhs/ulQjdF+5
-::cxAkpRVqdFKZSDk=
-::cBs/ulQjdF+5
-::ZR41oxFsdFKZSDk=
-::eBoioBt6dFKZSDk=
-::cRo6pxp7LAbNWATEpCI=
-::egkzugNsPRvcWATEpCI=
-::dAsiuh18IRvcCxnZtBJQ
-::cRYluBh/LU+EWAnk
-::YxY4rhs+aU+IeA==
-::cxY6rQJ7JhzQF1fEqQJhZkoaHUrXXA==
-::ZQ05rAF9IBncCkqN+0xwdVsFAlXMbSXvZg==
-::ZQ05rAF9IAHYFVzEqQIFJglRTQjCGWW9D7sZqNjp4OCCoVldd+0xbIrVzvSjIe4S7UD2FQ==
-::eg0/rx1wNQPfEVWB+kM9LVsJDGQ=
-::fBEirQZwNQPfEVWB+kM9LVsJDGQ=
-::cRolqwZ3JBvQF1fEqQJQ
-::dhA7uBVwLU+EWDk=
-::YQ03rBFzNR3SWATElA==
-::dhAmsQZ3MwfNWATE11A1KQ9RSESAJSubHKAO4e3M4OaBwg==
-::ZQ0/vhVqMQ3MEVWAtB9wSA==
-::Zg8zqx1/OA3MEVWAtB9wSA==
-::dhA7pRFwIByZRRnk
-::Zh4grVQjdCuDJGyK5kcxJFtkXguIOWiuFYku7fj0/NayhwAtRu01fYzP+buANOUd/mjle5cq02hmqs4ACRpLey6eYB0xqGJnuGOMOcKsoQDrT0udxUQ+D2B6k07Rgio8ZcEmn9sGsw==
-::YB416Ek+ZG8=
-::
-::
-::978f952a14a936cc963da21a135fa983
 @Echo off
 cd /d "%~dp0"
 setlocal EnableDelayedExpansion
 
-set UEPCM_Data_Folder=Data
 set C_Temp=C:\Temps
 
-mkdir %C_Temp%
+if not exist "%C_Temp%" mkdir "%C_Temp%"
 
-if not exist %UEPCM_Data_Folder% (
-    goto :MissingRequiredFiles
+set "UEPCM_Data_Folder=Data"
+if exist "%UEPCM_Data_Folder%" (
+    dir /b /a "%UEPCM_Data_Folder%" | findstr . >nul && (
+        echo %UEPCM_Data_Folder% folder is not empty.
+        echo.
+        echo.Checking if required files exist...
+        echo.
+        goto :CheckRequiredFilesExist
+    ) || (
+        echo %UEPCM_Data_Folder% folder is empty. Removing the folder.
+        echo.
+        rmdir "%UEPCM_Data_Folder%"
+        goto :ContinueStartup
+    )
 ) else (
-    goto :RequiredFilesExist
+    echo %UEPCM_Data_Folder% folder does not exist.
+    echo.
+    mkdir %UEPCM_Data_Folder%
+    mkdir %UEPCM_Data_Folder%\Bin
 )
 
-:MissingRequiredFiles
+set "SettingsFile=Settings.json"
+if not exist %SettingsFile% (
+    echo.Creating %SettingsFile% file...
+    echo { > %SettingsFile%
+    echo   "UE_Project_Content_Folder_Dir": "", >> %SettingsFile%
+    echo   "UEPCM_Content_Projects_Storage_Dir": "" >> %SettingsFile%
+    echo } >> %SettingsFile%
+)
 
-mkdir %UEPCM_Data_Folder%
+:: Create a temporary JSON file with sample data
+echo {"PromptedToDownloadRequiredFiles":"false"} > %C_Temp%\temp.json
+echo.creating temp json...
 
-set "TEMP_FILE_DIR=%C_Temp%"
+:CheckRequiredFilesExist
+set "files[0]=%UEPCM_Data_Folder%\Bin\cmdmenusel.exe"
+set "files[1]=%UEPCM_Data_Folder%\Bin\jq-win64.exe"
+set "files[2]=%UEPCM_Data_Folder%\Bin\jq-win64-load.bat"
+set "files[3]=%UEPCM_Data_Folder%\Bin\load_settings.bat"
+
+set "urls[0]=https://www.dropbox.com/s/9y11neluvfq320p/cmdmenusel.exe?dl=1" REM cmdmenusel.exe
+set "urls[1]=https://www.dropbox.com/s/b6jnfn730ylbj7r/jq-win64.exe?dl=1" REM jq-win64.exe
+set "urls[2]=https://www.dropbox.com/s/g8f04slf0dtdjmz/jq-win64-load.bat?dl=1" REM jq-win64-load.bat
+set "urls[3]=https://www.dropbox.com/s/mt8o4csvvri7hy0/load_settings.bat?dl=1" REM load_settings.bat
+
+set missingFiles=
+set urlsToDownload=
+
+set "firstMissingFileURL="
+for /l %%i in (0, 1, 3) do (
+    set file=!files[%%i]!
+    if not exist "!file!" (
+        set missingFiles=!missingFiles!!file!,
+        set urlsToDownload=!urlsToDownload!!urls[%%i]!,
+        if not defined firstMissingFileURL set "firstMissingFileURL=!urls[%%i]!"
+    )
+)
+
+:: Parse the JSON file and extract the required value
+for /f "tokens=2 delims=:," %%a in ('type %C_Temp%\temp.json ^| findstr /i /c:"PromptedToDownloadRequiredFiles"') do (
+    set "PromptedToDownloadRequiredFiles=%%~a"
+    set "PromptedToDownloadRequiredFiles=!PromptedToDownloadRequiredFiles:~0,-3!"
+)
+
+if "!PromptedToDownloadRequiredFiles!"=="true" ( goto :SkipMissingFilesList )
 
 echo.Required files are missing...
 echo.
+for %%a in ("%missingFiles:,=","%") do (
+    set "filename=%%~nxa"
+    echo.!filename!
+)
+
+:SkipMissingFilesList
+
+:DownloadMissingFiles
+if defined missingFiles (
+    if "!PromptedToDownloadRequiredFiles!"=="false" (
+        goto :PromptToDownloadMissingFiles
+    )
+    
+    set missingFiles=%missingFiles:~0,-1%
+
+    for /f "tokens=1 delims=," %%i in ("%missingFiles%") do (
+        set "firstMissingFile=%%i"
+        goto :processFirstMissingFile
+    )
+    :processFirstMissingFile
+    echo The first missing file is %firstMissingFile%
+
+    for /f "tokens=1 delims=," %%u in ("%urlsToDownload%") do (
+        set "firstMissingFileURL=%%u"
+        goto :processFirstMissingFileURL
+    )
+    :processFirstMissingFileURL
+    echo The first missing file url is %firstMissingFileURL%
+
+    echo.
+    echo.Downloading !firstMissingFile!...
+    echo.
+    echo.
+    curl -L -o "%~dp0!firstMissingFile!" "!firstMissingFileURL!"
+    goto :CheckRequiredFilesExist
+    
+) else (
+    echo All files exist.
+    :: Delete the temporary JSON file
+    del %C_Temp%\temp.json
+    goto :ContinueStartup
+)
+
+:PromptToDownloadMissingFiles
+echo.prompted to download files...
 
 set message="Download missing required files?"
 set yesno=0
 
-echo Set objShell = WScript.CreateObject("WScript.Shell") > %TEMP_FILE_DIR%\tmp.vbs
-echo Set objFSO = CreateObject("Scripting.FileSystemObject") >> %TEMP_FILE_DIR%\tmp.vbs
-echo intButton = objShell.Popup(%message%,0,"Confirmation",vbYesNo+vbQuestion) >> %TEMP_FILE_DIR%\tmp.vbs
-echo if intButton = vbYes Then >> %TEMP_FILE_DIR%\tmp.vbs
-echo     WScript.Echo "Yes" >> %TEMP_FILE_DIR%\tmp.vbs
-echo else >> %TEMP_FILE_DIR%\tmp.vbs
-echo     WScript.Echo "No" >> %TEMP_FILE_DIR%\tmp.vbs
-echo end if >> %TEMP_FILE_DIR%\tmp.vbs
-cscript //nologo %TEMP_FILE_DIR%\tmp.vbs > %TEMP_FILE_DIR%\result.txt
-set /p yesno=<%TEMP_FILE_DIR%\result.txt
+echo Set objShell = WScript.CreateObject("WScript.Shell") > %C_Temp%\tmp.vbs
+echo Set objFSO = CreateObject("Scripting.FileSystemObject") >> %C_Temp%\tmp.vbs
+echo intButton = objShell.Popup(%message%,0,"Confirmation",vbYesNo+vbQuestion) >> %C_Temp%\tmp.vbs
+echo if intButton = vbYes Then >> %C_Temp%\tmp.vbs
+echo     WScript.Echo "Yes" >> %C_Temp%\tmp.vbs
+echo else >> %C_Temp%\tmp.vbs
+echo     WScript.Echo "No" >> %C_Temp%\tmp.vbs
+echo end if >> %C_Temp%\tmp.vbs
+cscript //nologo %C_Temp%\tmp.vbs > %C_Temp%\result.txt
+set /p yesno=<%C_Temp%\result.txt
 
 if "%yesno%"=="Yes" (
-    goto :DownloadRequiredFiles
+    :: Parse the JSON file and extract the required value
+    for /f "tokens=2 delims=:," %%a in ('type %C_Temp%\temp.json ^| findstr /i /c:"PromptedToDownloadRequiredFiles"') do (
+        set "PromptedToDownloadRequiredFiles=%%~a"
+        set "PromptedToDownloadRequiredFiles=!PromptedToDownloadRequiredFiles:~0,-3!"
+    )
+
+    :: Echo the current PromptedToDownloadRequiredFiles
+    echo Current PromptedToDownloadRequiredFiles: %PromptedToDownloadRequiredFiles%
+
+    :: Change the PromptedToDownloadRequiredFiles to 35
+    set "PromptedToDownloadRequiredFiles=!PromptedToDownloadRequiredFiles:false=true!"
+
+    :: Write the updated dictionary to the temporary file
+    echo %PromptedToDownloadRequiredFiles% > %C_Temp%\temp.json
+
+    :: Read the "PromptedToDownloadRequiredFiles" key from the file and set it to a variable
+    for /f "usebackq tokens=2 delims=:," %%a in ("%C_Temp%\temp.json") do set "PromptedToDownloadRequiredFiles=%%a"
+
+    :: Echo the updated PromptedToDownloadRequiredFiles
+    echo Updated PromptedToDownloadRequiredFiles: %PromptedToDownloadRequiredFiles%
+
+    :: Delete the temporary file
+    del %C_Temp%\temp.json
+    goto :DownloadMissingFiles
 ) else (
+    echo.The missing files were not downloaded.
     timeout /t 3 /nobreak
     RD /S /Q %C_Temp%
     rmdir %UEPCM_Data_Folder%
     goto :Exit
 )
 
-:DownloadRequiredFiles
 
-set UEPCM_Required_Files_Download_Link=https://www.dropbox.com/s/glhigkf9an1cm4e/UEPCM_Required_Files.zip?dl=1
-
-set "ZIP_FILENAME=%TEMP_FILE_DIR%\UEPCM_Required_Files.zip"
-
-set "extractDir=%UEPCM_Data_Folder%"
-
-echo Downloading required files...
-curl -L -o "%ZIP_FILENAME%" "%UEPCM_Required_Files_Download_Link%"
-echo.
-echo Extracting %ZIP_FILENAME%...
-set PowerShellExtract=%TEMP_FILE_DIR%\Expand-Archive.ps1
-echo Try { >> %PowerShellExtract%
-echo     # Code that might throw an error >> %PowerShellExtract%
-echo     $ZIP_FILENAME = "%ZIP_FILENAME%" >> %PowerShellExtract%
-echo     $EXPANDARCHIVEDIRECTORY = "%~dp0%UEPCM_Data_Folder%" >> %PowerShellExtract%
-echo     if ($ZIP_FILENAME -match '[\[\]]' -or $EXPANDARCHIVEDIRECTORY -match '[\[\]]') { >> %PowerShellExtract%
-echo         # Handle the error condition here >> %PowerShellExtract%
-echo         $errorMessage = "$EXPANDARCHIVEDIRECTORY contains illegal characters, please move the project to a different directory and try again." >> %PowerShellExtract%
-echo         Write-Host $errorMessage >> %PowerShellExtract%
-echo         $exception = New-Object System.Exception($errorMessage) >> %PowerShellExtract%
-echo         throw $exception >> %PowerShellExtract%
-echo         exit 0 >> %PowerShellExtract%
-echo     } else { >> %PowerShellExtract%
-echo         # The strings are valid, continue with the script >> %PowerShellExtract%
-echo         Write-Host "The string does not contain illegal characters." >> %PowerShellExtract%
-echo         powershell.exe -nologo -noprofile -command "& { Start-Process powershell.exe -Verb RunAs -ArgumentList '-nologo -noprofile -command Expand-Archive -Path ''$ZIP_FILENAME'' -DestinationPath ''$EXPANDARCHIVEDIRECTORY'' -Force' -PassThru }" >> %PowerShellExtract%
-echo         exit 1 >> %PowerShellExtract%
-echo     } >> %PowerShellExtract%
-echo } >> %PowerShellExtract%
-echo Catch { >> %PowerShellExtract%
-echo     # Code to handle the error >> %PowerShellExtract%
-echo     $ErrorMessage = $_.Exception.Message >> %PowerShellExtract%
-echo     $FailedItem = $_.Exception.ItemName >> %PowerShellExtract%
-echo     # Log the error message and failed item to a file >> %PowerShellExtract%
-echo     $LogFilePath = "ErrorLog_" + (Get-Date -Format "yyyy-MM-dd_HH-mm-ss") + ".log" >> %PowerShellExtract%
-echo     Add-Content $LogFilePath "$(Get-Date) - Error: $ErrorMessage - Failed Item: $FailedItem" >> %PowerShellExtract%
-echo } >> %PowerShellExtract%
-
-PowerShell -ExecutionPolicy Bypass -File "%PowerShellExtract%" > log.log
-
-
-if %errorlevel% neq 1 (
-    echo An error occurred during the execution of the PowerShell script.
-    echo Error level: %errorlevel%
-    
-    echo.%~dp0%UEPCM_Data_Folder% contains illegal characters. Please move the project to a different directory and try again.
-    pause
-
-    RD /S /Q "%~dp0%UEPCM_Data_Folder%"
-    RD /S /Q "%TEMP_FILE_DIR%"
-
-    goto :Exit
-)
-
-echo.
-echo.Finished downloading required files!
-timeout /t 3 /nobreak
-RD /S /Q %C_Temp%
-echo.
-echo.removed temp %TEMP_FILE_DIR%
-
-:RequiredFilesExist
-
+:ContinueStartup
 :: Program Version
-Set programVersion=v1.1.1.5
+Set programVersion=v1.1.1.7
 :: Program Author
 Set programAuthor=AzurieWolf
 :: Set window Title
@@ -333,12 +359,24 @@ if "%NewProjectNameInput%"=="" (
     timeout /t %TimeoutTime%
     Goto :CreateNewProjectContentFolder
 ) else (
-    IF EXIST "%UEPCM_Content_Projects%\!NewProjectNameInput!" (
+    for /f "delims=" %%i in ('call "%jq%" -r ".projectName" "%Project_Content_Folder%\%Content_Project_Json_Data_File_Name%"') do ( set "projectName=%%i" )
+    if "!projectName!"=="!NewProjectNameInput!" (
+        Goto :NewCreateProjectActiveError
+    ) else if exist "%UEPCM_Content_Projects%\!NewProjectNameInput!" (
         Goto :NewCreateProjectError
     ) else (
         Goto :ContinueToCreateProject
     )
 )
+
+:NewCreateProjectActiveError
+cls
+echo.Your active project with the name '!NewProjectNameInput!' already exists...
+echo.
+echo.Please enter a different name to continue...
+echo.
+timeout /t %TimeoutTime%
+Goto :InputProjectName
 
 :NewCreateProjectError
 cls
